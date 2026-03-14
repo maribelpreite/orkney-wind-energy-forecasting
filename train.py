@@ -73,9 +73,10 @@ def main():
         predictions = pipeline.predict(X_train)
 
 
-        # --- Create and save EDA plots after hanndling missing values ---
+        # --- Create and save EDA plots ---
+        plot_df = wind_df.join(power_df, how="inner")
         os.makedirs("plots", exist_ok=True)
-        eda_fig = plots.create_eda_plots(joined_dfs)
+        eda_fig = plots.create_eda_plots(plot_df)
         eda_fig.savefig("plots/eda_plots.png")
         mlflow.log_artifact("plots/eda_plots.png")
         plt.close(eda_fig)
@@ -105,6 +106,7 @@ def parse_args():
     parser.add_argument("--model", type=str, required=True, choices=["linear", "xgboost"])
 
     parser.add_argument("--experiment", type=str, required=True)
+    parser.add_argument("--tag", type=str, default=None)
     parser.add_argument("--tracking-uri", type=str, default="http://127.0.0.1:5000")
 
     # xgboost hyperparams
@@ -117,12 +119,16 @@ def parse_args():
 
 def build_run_name(args):
     if args.model == "linear":
-        return "linear"
+        base = "linear"
+    elif args.model == "xgboost":
+        base = f"xg_n={args.n_estimators}_depth={args.max_depth}_lr={args.learning_rate}"
+    else:
+        base = args.model
 
-    if args.model == "xgboost":
-        return f"xg_n={args.n_estimators}_depth={args.max_depth}_lr={args.learning_rate}"
+    if args.tag:
+        return f"{base}_{args.tag}"
 
-    return args.model
+    return base
 
 
 def build_preprocesor(model_name):
