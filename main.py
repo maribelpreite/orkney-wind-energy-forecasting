@@ -80,23 +80,23 @@ def main():
             log_plots(wind_df, power_df, y_test, preds)
             print("Evaluation complete.")
 
-        elif args.mode == "train":
-            power_df, wind_df, X, y = load_full_data()
-            pipeline = build_pipeline(args)
+        # elif args.mode == "train":
+        #    power_df, wind_df, X, y = load_full_data()
+        #    pipeline = build_pipeline(args)
 
-            mlflow.sklearn.autolog()
+        #    mlflow.sklearn.autolog()
 
-            print("Training final model on all available data...")
-            pipeline.fit(X, y)
+        #    print("Training final model on all available data...")
+        #    pipeline.fit(X, y)
 
-            os.makedirs(os.path.dirname(args.model_path), exist_ok=True)
-            sio.dump(pipeline, args.model_path)
-            mlflow.log_artifact(args.model_path)
+        #    os.makedirs(os.path.dirname(args.model_path), exist_ok=True)
+        #    sio.dump(pipeline, args.model_path)
+        #    mlflow.log_artifact(args.model_path)
 
-            print(f"Model saved to {args.model_path}")
+        #    print(f"Model saved to {args.model_path}")
 
-        else:
-            raise ValueError(f"Unsupported mode: {args.mode}")
+        # else:
+        #    raise ValueError(f"Unsupported mode: {args.mode}")
 
 ########################################################################################################################
 
