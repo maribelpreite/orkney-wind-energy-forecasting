@@ -46,7 +46,7 @@ def main():
             scores = run_cv(pipeline, X_train, y_train, args.cv_splits)
             log_cv_results(scores, args.cv_splits)
 
-        elif args.mode == "train":
+        elif args.mode == "eval":
             preds = train_and_evaluate(pipeline, X_train, y_train, X_test, y_test)
             log_plots(wind_df, power_df, y_test, preds)
 
@@ -61,7 +61,7 @@ def main():
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--mode", type=str, required=True, choices=["cv", "train"])
+    parser.add_argument("--mode", type=str, required=True, choices=["cv", "eval"])
     parser.add_argument("--model", type=str, required=True, choices=["linear", "xgboost"])
 
     parser.add_argument("--experiment", type=str, required=True)
@@ -146,14 +146,17 @@ def build_pipeline(args):
 
 # EXPERIMENTATION, TRAINING, EVALUATION FUNCTIONS
 def run_cv(pipeline, X_train, y_train, n_splits):
-    tscv = TimeSeriesSplit(n_splits=n_splits)
+    cv_splits = preprocessing.custom_time_series_split(
+        X_train,
+        n_splits=n_splits
+    )
 
-    scores = cross_validate( #per fold scores
-        pipeline, #this function will call .fit() and .predict() automatically
+    scores = cross_validate(
+        pipeline,
         X_train,
         y_train,
-        cv=tscv,
-        scoring={ #which metrics to compute at each fold
+        cv=cv_splits,
+        scoring={
             "rmse": "neg_root_mean_squared_error",
             "mae": "neg_mean_absolute_error",
             "r2": "r2"

@@ -60,3 +60,30 @@ def train_test_split(df, target_col="Total", split_frac=0.8, window=500):
     y_test = y.iloc[split_idx:]
 
     return X_train, X_test, y_train, y_test
+
+
+def custom_time_series_split(X, n_splits):
+    n_rows = len(X)
+
+    valid_mask = X[["Direction", "Speed"]].notna().all(axis=1).to_numpy() # candidate rows to be the first in a validation fold 
+    valid_idx = np.flatnonzero(valid_mask) # candidate row index
+
+    ideal_starts = np.linspace(0, n_rows - 1, n_splits + 2, dtype=int)[1:-1]
+
+    dist = np.abs(valid_idx[:, None] - ideal_starts[None, :])
+    best_pos = dist.argmin(axis=0)
+    fold_starts = valid_idx[best_pos]
+
+    splits = []
+    for i, start in enumerate(fold_starts):
+        train_idx = np.arange(start)
+
+        if i < len(fold_starts) - 1:
+            end = fold_starts[i + 1]
+        else:
+            end = n_rows
+
+        val_idx = np.arange(start, end)
+        splits.append((train_idx, val_idx))
+
+    return splits
