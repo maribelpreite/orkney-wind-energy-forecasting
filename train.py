@@ -47,7 +47,7 @@ def main():
             log_cv_results(scores, args.cv_splits)
 
         elif args.mode == "train":
-            fitted_model, preds = train_and_evaluate(pipeline, X_train, y_train, X_test, y_test)
+            preds = train_and_evaluate(pipeline, X_train, y_train, X_test, y_test)
             log_plots(wind_df, power_df, y_test, preds)
 
             # if args.save_model:
@@ -124,7 +124,8 @@ def build_model(args):
         model = XGBRegressor(
             n_estimators=args.n_estimators,
             max_depth=args.max_depth,
-            learning_rate=args.learning_rate
+            learning_rate=args.learning_rate,
+            random_state = 42
         )
 
     else:
@@ -164,13 +165,19 @@ def run_cv(pipeline, X_train, y_train, n_splits):
 
 
 def log_cv_results(scores, n_splits):
+    rmse = -scores["test_rmse"]
+    mae = -scores["test_mae"]
+    r2 = scores["test_r2"]
+
     mlflow.log_param("cv_n_splits", n_splits)
-    mlflow.log_metric("cv_rmse_mean", -scores["test_rmse"].mean())
-    mlflow.log_metric("cv_rmse_std", scores["test_rmse"].std())
-    mlflow.log_metric("cv_mae_mean", -scores["test_mae"].mean())
-    mlflow.log_metric("cv_mae_std", scores["test_mae"].std())
-    mlflow.log_metric("cv_r2_mean", scores["test_r2"].mean())
-    mlflow.log_metric("cv_r2_std", scores["test_r2"].std())
+    mlflow.log_param("cv_strategy", "TimeSeriesSplit")
+
+    mlflow.log_metric("cv_rmse_mean", rmse.mean())
+    mlflow.log_metric("cv_rmse_std", rmse.std())
+    mlflow.log_metric("cv_mae_mean", mae.mean())
+    mlflow.log_metric("cv_mae_std", mae.std())
+    mlflow.log_metric("cv_r2_mean", r2.mean())
+    mlflow.log_metric("cv_r2_std", r2.std())
 
 
 def train_and_evaluate(pipeline, X_train, y_train, X_test, y_test):
@@ -187,7 +194,7 @@ def train_and_evaluate(pipeline, X_train, y_train, X_test, y_test):
     mlflow.log_metric("test_mae", mae)
     mlflow.log_metric("test_r2", r2)
 
-    return pipeline, preds
+    return preds
 
 
 # VISUALIZATIONS
